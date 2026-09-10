@@ -5,7 +5,9 @@ import '../../core/theme.dart';
 
 /// Settings: AI provider config, C++ core status.
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.onDeleteAll});
+
+  final VoidCallback? onDeleteAll;
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +50,20 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Builder(
-            builder:
-                (context) => _statusTile(
-                  'C++ priority core',
-                  kIsWeb
-                      ? 'Dart fallback active (web)'
-                      : 'Native core or Dart fallback',
-                  !kIsWeb,
-                ),
+            builder: (context) => _statusTile(
+              'C++ priority core',
+              kIsWeb
+                  ? 'Dart fallback active (web)'
+                  : 'Native core or Dart fallback',
+              !kIsWeb,
+            ),
           ),
           const SizedBox(height: 32),
-          TextButton(onPressed: () {}, child: const Text('Delete all data')),
+          TextButton(
+            onPressed: onDeleteAll,
+            style: TextButton.styleFrom(foregroundColor: kCoralRed),
+            child: const Text('Delete all data'),
+          ),
         ],
       ),
     );

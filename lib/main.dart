@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'ui/screens/home_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const AiTaskManagerApp());
 }
 

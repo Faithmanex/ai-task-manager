@@ -10,17 +10,16 @@ import 'priority_core.dart';
 /// in which case the caller falls back to Dart scoring.
 PriorityScoreNative loadScoreNative() {
   final lib = _openLibrary();
-  return lib
-      .lookupFunction<
-        ffi.Double Function(
-          ffi.Double,
-          ffi.Double,
-          ffi.Double,
-          ffi.Double,
-          ffi.Int32,
-        ),
-        double Function(double, double, double, double, int)
-      >('priority_score');
+  return lib.lookupFunction<
+    ffi.Double Function(
+      ffi.Double,
+      ffi.Double,
+      ffi.Double,
+      ffi.Double,
+      ffi.Int32,
+    ),
+    double Function(double, double, double, double, int)
+  >('priority_score');
 }
 
 ffi.DynamicLibrary _openLibrary() {

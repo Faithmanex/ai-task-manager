@@ -11,8 +11,13 @@ import 'priority_core_stub.dart'
     if (dart.library.io) 'priority_core_native.dart';
 
 /// Native loader contract, satisfied per platform.
-typedef PriorityScoreNative =
-    double Function(double, double, double, double, int);
+typedef PriorityScoreNative = double Function(
+  double,
+  double,
+  double,
+  double,
+  int,
+);
 
 /// Result of a scoring call.
 class ScoreResult {
@@ -65,10 +70,9 @@ class PriorityCore {
       Priority.high => 1.0,
     };
 
-    final ageDays =
-        task.createdAt == null
-            ? 0.0
-            : at.difference(task.createdAt!).inMinutes / 1440.0;
+    final ageDays = task.createdAt == null
+        ? 0.0
+        : at.difference(task.createdAt!).inMinutes / 1440.0;
 
     var flags = 0;
     if (task.isOverdue) flags |= kFlagOverdue;

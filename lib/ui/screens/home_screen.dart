@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _controller.addListener(() => setState(() {}));
+    _controller.load();
   }
 
   @override
@@ -96,7 +97,14 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              MaterialPageRoute(
+                builder: (_) => SettingsScreen(
+                  onDeleteAll: () async {
+                    await _controller.deleteAll();
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                ),
+              ),
             ),
             icon: const Icon(Icons.settings_outlined, color: kFog),
           ),
@@ -109,28 +117,46 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 96),
-        children: [
-          Text(
-            '${done.length} of ${_controller.tasks.length} done'
-            '${_controller.hasGateway ? ' · AI ready' : ''}',
-            style: const TextStyle(fontSize: 15, color: kFog),
-          ),
-          const SizedBox(height: 16),
-          ...open.map((t) => _TaskTile(controller: _controller, task: t)),
-          if (done.isNotEmpty) ...[
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                'Completed',
-                style: TextStyle(fontSize: 13, color: kAsh),
-              ),
-            ),
-            ...done.map((t) => _TaskTile(controller: _controller, task: t)),
-          ],
-        ],
-      ),
+      body: _controller.isLoaded
+          ? ListView(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 96),
+              children: [
+                Text(
+                  '${done.length} of ${_controller.tasks.length} done'
+                  '${_controller.hasGateway ? ' · AI ready' : ''}',
+                  style: const TextStyle(fontSize: 15, color: kFog),
+                ),
+                const SizedBox(height: 16),
+                if (open.isEmpty && done.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 48),
+                    child: Column(
+                      children: [
+                        Icon(Icons.checklist_outlined, size: 64, color: kFog),
+                        SizedBox(height: 16),
+                        Text(
+                          'All clear — add your first task',
+                          style: TextStyle(fontSize: 15, color: kFog),
+                        ),
+                      ],
+                    ),
+                  ),
+                ...open.map((t) => _TaskTile(controller: _controller, task: t)),
+                if (done.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Completed',
+                      style: TextStyle(fontSize: 13, color: kAsh),
+                    ),
+                  ),
+                  ...done.map(
+                    (t) => _TaskTile(controller: _controller, task: t),
+                  ),
+                ],
+              ],
+            )
+          : const Center(child: CircularProgressIndicator(color: kAcidLime)),
       bottomSheet: _CaptureBar(
         controller: _captureController,
         busy: _parsing,
