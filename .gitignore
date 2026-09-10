@@ -1,0 +1,28 @@
+# Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Secrets — never commit
+.env
+*.env
+secrets*
+
+# Native build artifacts
+cpp/build/
+*.dll
+*.so
+*.dylib
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+name: 'PriorityCoreBindings'
+description: 'Bindings for the C++ priority core'
+output: 'lib/services/priority/bindings.dart'
+headers:
+  entry-points:
+    - 'cpp/include/priority_core.h'
+ffi-native:

@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: dart format --set-exit-if-changed lib test || true
+
+      - run: flutter analyze
+
+      - run: flutter test
+
+      - name: Build web (Vercel artifact)
+        run: flutter build web --release
