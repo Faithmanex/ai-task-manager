@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "buildCommand": "curl -sL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.3-stable.tar.xz -o /tmp/flutter.tar.xz && tar -xJf /tmp/flutter.tar.xz -C /opt && git config --global --add safe.directory /opt/flutter && /opt/flutter/bin/flutter --version && /opt/flutter/bin/flutter pub get && /opt/flutter/bin/flutter build web --release",
   "outputDirectory": "build/web",
+  "installCommand": "echo 'skip'",
   "cleanUrls": true,
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
