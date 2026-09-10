@@ -1,9 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "curl -sL https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.5-stable.zip -o flutter.zip && unzip -q flutter.zip && ./flutter/bin/flutter build web --release --dart-define=BUILD_ENV=vercel",
   "outputDirectory": "build/web",
-  "installCommand": "echo 'Using cached Flutter'",
   "cleanUrls": true,
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
