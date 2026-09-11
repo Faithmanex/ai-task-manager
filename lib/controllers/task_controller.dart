@@ -9,11 +9,21 @@ import '../services/priority/priority_core.dart';
 
 /// Central app state: tasks, persistence, AI gateway wiring, priorities.
 class TaskController extends ChangeNotifier {
-  TaskController({this.gateway, TaskStore? store})
-    : _store = store ?? TaskStore(),
+  TaskController({AiGateway? gateway, TaskStore? store})
+    : _gateway = gateway,
+      _store = store ?? TaskStore(),
       tasks = [];
 
-  final AiGateway? gateway;
+  AiGateway? _gateway;
+  AiGateway? get gateway => _gateway;
+
+  set gateway(AiGateway? value) {
+    if (_gateway != value) {
+      _gateway = value;
+      notifyListeners();
+    }
+  }
+
   final TaskStore _store;
   final List<Task> tasks;
 

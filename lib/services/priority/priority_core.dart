@@ -11,13 +11,8 @@ import 'priority_core_stub.dart'
     if (dart.library.io) 'priority_core_native.dart';
 
 /// Native loader contract, satisfied per platform.
-typedef PriorityScoreNative = double Function(
-  double,
-  double,
-  double,
-  double,
-  int,
-);
+typedef PriorityScoreNative =
+    double Function(double, double, double, double, int);
 
 /// Result of a scoring call.
 class ScoreResult {
