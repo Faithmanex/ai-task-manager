@@ -9,16 +9,28 @@ import '../services/priority/priority_core.dart';
 
 /// Central app state: tasks, persistence, AI gateway wiring, priorities.
 class TaskController extends ChangeNotifier {
-  TaskController({this.gateway, TaskStore? store})
+  TaskController({this._gateway, TaskStore? store})
     : _store = store ?? TaskStore(),
       tasks = [];
 
-  final AiGateway? gateway;
+  AiGateway? _gateway;
   final TaskStore _store;
   final List<Task> tasks;
 
   bool _loaded = false;
   bool get isLoaded => _loaded;
+
+  AiGateway? get gateway => _gateway;
+
+  bool get hasGateway => _gateway != null;
+
+  /// Hot-swap the gateway when the user saves AI settings.
+  // ignore: avoid_setters_without_getters
+  // ignore: prefer_initializing_formals
+  void setGateway(AiGateway? value) {
+    _gateway = value;
+    notifyListeners();
+  }
 
   Future<void> load() async {
     if (_loaded) return;
@@ -27,8 +39,6 @@ class TaskController extends ChangeNotifier {
     _loaded = true;
     notifyListeners();
   }
-
-  bool get hasGateway => gateway != null;
 
   List<Task> get openTasks =>
       tasks.where((t) => !t.completed).toList()

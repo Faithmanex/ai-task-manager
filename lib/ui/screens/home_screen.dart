@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../controllers/task_controller.dart';
 import '../../core/theme.dart';
 import '../../models/task.dart';
+import '../../services/ai/ai_settings_store.dart';
+import '../../services/ai/providers/openai_provider.dart';
 import 'chat_screen.dart';
 import 'settings_screen.dart';
 
@@ -24,6 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _controller.addListener(() => setState(() {}));
     _controller.load();
+    _loadGateway();
+  }
+
+  Future<void> _loadGateway() async {
+    final config = await AiSettingsStore().load();
+    if (config != null && mounted) {
+      _controller.setGateway(OpenAiProvider(config: config));
+    }
   }
 
   @override
@@ -99,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => SettingsScreen(
+                  controller: _controller,
                   onDeleteAll: () async {
                     await _controller.deleteAll();
                     if (context.mounted) Navigator.pop(context);
