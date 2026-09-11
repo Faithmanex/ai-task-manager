@@ -41,24 +41,74 @@ ThemeData buildTheme() {
     splashFactory: InkSparkle.splashFactory,
     dividerColor: kGraphite,
     textTheme: const TextTheme(
-      displayLarge: TextStyle(fontSize: 72, fontWeight: FontWeight.w500),
-      headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w400),
-      headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
-      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-      bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+      // Type scale per DESIGN.md (Linear reference):
+      // display 72/510 · heading-sm 32/400 · heading 24/400 ·
+      // body-lg 20/590 · body 16/400 · body-sm 15/400 · caption 13/400
+      displayLarge: TextStyle(
+        fontSize: 72,
+        fontWeight: FontWeight.w500,
+        height: 1.0,
+        letterSpacing: -1.584,
+      ),
+      displaySmall: TextStyle(
+        fontSize: 48,
+        fontWeight: FontWeight.w500,
+        height: 1.0,
+        letterSpacing: -1.056,
+      ),
+      headlineLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w400,
+        height: 1.13,
+        letterSpacing: -0.704,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w400,
+        height: 1.33,
+        letterSpacing: -0.288,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w500,
+        height: 1.33,
+        letterSpacing: -0.24,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        height: 1.5,
+        letterSpacing: -0.16,
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+      ),
       bodyMedium: TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.w400,
+        height: 1.6,
+        letterSpacing: -0.165,
         color: kMist,
       ),
       bodySmall: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w400,
+        height: 1.2,
         color: kFog,
       ),
-      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-      labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.4,
+        letterSpacing: -0.14,
+      ),
+      labelMedium: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        height: 1.4,
+      ),
     ).apply(bodyColor: kMist, displayColor: kPaper),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
