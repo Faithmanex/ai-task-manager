@@ -1,0 +1,84 @@
+name: Jules Scheduled Tasks
+
+on:
+  schedule:
+    # Daily at 02:00 UTC - keeps repo active
+    - cron: "0 2 * * *"
+    # Weekly dependency check Monday 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Manual task prompt for Jules"
+        required: false
+        default: "Pick next backlog item from JULES_BACKLOG.md"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  create-jules-task:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Jules task issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PROMPT="${{ inputs.task }}"
+          if [ -z "$PROMPT" ]; then
+            # Rotate through backlog - use day-of-year to pick task
+            DOY=$(date +%j)
+            TASKS=(
+              "Implement P3: Day Pilot streaming chat with action cards (lib/ui/screens/chat_screen.dart - wire gateway.chat streaming, add confirmation cards for create/move/complete)"
+              "Implement P3: Daily review screen (DailyReview model -> UI, call gateway.dailyReview with DayLog)"
+              "Implement P4: Recurrence rules for tasks (RRULE subset: daily/weekly/monthly, next-due computation, Tests)"
+              "Implement P4: Search + filters (search bar, priority/due filters, empty states)"
+              "Implement P4: Accessibility pass (semantics labels, contrast 4.5:1 verify, dynamic type)"
+              "Implement P4: Local persistence hardening (encrypt API keys at rest, migration tests)"
+              "Chore: Dependency update (flutter pub outdated -> bump, flutter analyze clean)"
+            )
+            IDX=$(( 10#$DOY % ${#TASKS[@]} ))
+            PROMPT="${TASKS[$IDX]}"
+          fi
+
+          # Check if a jules task is already open - avoid spam
+          OPEN=$(gh issue list --state open --label jules --json number --jq length)
+          if [ "$OPEN" -ge 3 ]; then
+            echo "Already $OPEN open jules tasks, skipping"
+            exit 0
+          fi
+
+          TITLE="Jules: $PROMPT"
+          BODY="Automated scheduled task for Jules.
+
+          **Prompt:**
+          $PROMPT
+
+          **Context:**
+          - Repo: Faithmanex/ai-task-manager
+          - Branch: master
+          - Blueprint: BLUEPRINT.md phases P3-P4
+          - Design: DESIGN.md
+          - Agent rules: AGENTS.md
+
+          **Instructions for Jules:**
+          1. Read BLUEPRINT.md, PROMPT.md, AGENTS.md, DESIGN.md
+          2. Implement the task, keep tests green (flutter analyze + flutter test + flutter build web)
+          3. Follow provider-agnostic AI gateway and C++ fallback rules
+          4. Open a PR against master
+
+          Created by .github/workflows/jules-scheduled.yml on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          gh issue create --title "$TITLE" --body "$BODY" --label jules
+          echo "Created issue: $TITLE"
+
+      - name: Ensure jules label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create jules --color "6e40ff" --description "Task for Google Jules agent" --force 2>/dev/null || true

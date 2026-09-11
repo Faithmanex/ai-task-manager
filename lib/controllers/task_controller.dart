@@ -20,45 +20,13 @@ class TaskController extends ChangeNotifier {
   bool _loaded = false;
   bool get isLoaded => _loaded;
 
-  /// Load persisted tasks once at startup. Call before first frame.
   Future<void> load() async {
     if (_loaded) return;
     final stored = await _store.load();
-    if (stored.isEmpty) {
-      tasks.addAll(_seedTasks());
-    } else {
-      tasks.addAll(stored);
-    }
+    tasks.addAll(stored);
     _loaded = true;
     notifyListeners();
   }
-
-  List<Task> _seedTasks() => [
-    Task(
-      id: 't1',
-      title: 'Email Dana the revised deck',
-      notes: 'Attach Q3 numbers',
-      dueDate: DateTime.now().add(const Duration(hours: 20)),
-      priority: Priority.high,
-      createdAt: DateTime.now(),
-    ),
-    Task(
-      id: 't2',
-      title: 'Book dentist appointment',
-      dueDate: DateTime.now().add(const Duration(days: 3)),
-      priority: Priority.low,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Task(
-      id: 't3',
-      title: 'Plan team offsite agenda',
-      subtasks: [
-        Subtask(id: 's1', title: 'Collect topics'),
-        Subtask(id: 's2', title: 'Draft schedule'),
-      ],
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-  ];
 
   bool get hasGateway => gateway != null;
 

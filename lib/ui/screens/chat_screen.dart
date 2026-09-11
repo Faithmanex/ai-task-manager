@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/task_controller.dart';
 import '../../core/theme.dart';
+import '../../models/task.dart';
+import '../../services/ai/gateway.dart';
 
-/// Day Pilot chat assistant screen (P3 placeholder UI).
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  const ChatScreen({super.key, required this.controller});
+  final TaskController controller;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -12,27 +15,91 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final _input = TextEditingController();
+  final _scroll = ScrollController();
   final _messages = <_Msg>[];
+  bool _typing = false;
 
   @override
   void dispose() {
     _input.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
-  void _send() {
-    final text = _input.text.trim();
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _send([String? preset]) async {
+    final text = (preset ?? _input.text).trim();
     if (text.isEmpty) return;
+    if (!widget.controller.hasGateway) {
+      setState(() {
+        _messages.add(_Msg.user(text));
+        _messages.add(
+          _Msg.assistant(
+            'AI not configured. Add your API key in Settings → AI Gateway to use Day Pilot.',
+          ),
+        );
+      });
+      _input.clear();
+      _scrollToBottom();
+      return;
+    }
+    _input.clear();
     setState(() {
       _messages.add(_Msg.user(text));
-      // Placeholder echo until gateway chat is wired (P3).
-      _messages.add(
-        _Msg.assistant(
-          'Day Pilot ships in Phase 3 — I\'ll be able to plan your day here.',
-        ),
-      );
+      _typing = true;
     });
-    _input.clear();
+    _scrollToBottom();
+
+    String reply;
+    try {
+      final history = _messages
+          .map(
+            (m) => ChatMessage(
+              role: m.isUser ? ChatRole.user : ChatRole.assistant,
+              text: m.text,
+            ),
+          )
+          .toList();
+      final ctx = TaskContext(
+        openTaskCount: widget.controller.openTasks.length,
+        todayTaskCount: widget.controller.openTasks
+            .where((t) => t.dueDate != null && _isToday(t.dueDate!))
+            .length,
+      );
+      final chunks = widget.controller.gateway!.chat(history, ctx);
+      final buf = StringBuffer();
+      await for (final c in chunks) {
+        buf.write(c.text);
+        if (c.done) break;
+      }
+      if (buf.isEmpty) throw const AiParseException('Empty response from AI');
+      reply = buf.toString();
+    } catch (e) {
+      reply = 'AI request failed: $e';
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _typing = false;
+      _messages.add(_Msg.assistant(reply));
+    });
+    _scrollToBottom();
+  }
+
+  static bool _isToday(DateTime d) {
+    final now = DateTime.now();
+    return d.year == now.year && d.month == now.month && d.day == now.day;
   }
 
   @override
@@ -51,47 +118,103 @@ class _ChatScreenState extends State<ChatScreen> {
             child: _messages.isEmpty
                 ? _emptyState()
                 : ListView.builder(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: _messages.length,
-                    itemBuilder: (_, i) => _bubble(_messages[i]),
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    itemCount: _messages.length + (_typing ? 1 : 0),
+                    itemBuilder: (_, i) {
+                      if (_typing && i == _messages.length) {
+                        return _typingBubble();
+                      }
+                      return _bubble(_messages[i]);
+                    },
                   ),
           ),
+          if (_messages.isNotEmpty) _suggestions(),
           _inputBar(),
         ],
       ),
     );
   }
 
-  Widget _emptyState() => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
+  Widget _typingBubble() => Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: kObsidian,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2, color: kFog),
+          ),
+          SizedBox(width: 8),
+          Text('Thinking…', style: TextStyle(fontSize: 13, color: kFog)),
+        ],
+      ),
+    ),
+  );
+
+  Widget _suggestions() => Container(
+    alignment: Alignment.centerLeft,
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+    child: Wrap(
+      spacing: 8,
       children: [
-        Icon(Icons.auto_awesome_outlined, size: 64, color: kFog),
-        const SizedBox(height: 16),
-        const Text(
-          'Plan your day',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            color: kBone,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Your AI planning assistant',
-          style: TextStyle(fontSize: 15, color: kFog),
-        ),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: _send,
-          style: FilledButton.styleFrom(
-            backgroundColor: kAcidLime,
-            foregroundColor: kVoid,
-            shape: const StadiumBorder(),
-          ),
-          child: const Text('Plan my day'),
-        ),
+        _chip('Plan my day'),
+        _chip('What’s due today?'),
+        _chip('Add task: Buy groceries tomorrow'),
       ],
+    ),
+  );
+
+  Widget _chip(String label) => ActionChip(
+    label: Text(label, style: const TextStyle(fontSize: 12, color: kMist)),
+    backgroundColor: kGraphite,
+    side: BorderSide.none,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    onPressed: () => _send(label),
+  );
+
+  Widget _emptyState() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.auto_awesome_outlined, size: 64, color: kFog),
+          const SizedBox(height: 16),
+          const Text(
+            'Plan your day',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: kBone,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Connect an AI model in Settings to get started.',
+            style: TextStyle(fontSize: 14, color: kFog),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: () => _send('plan my day'),
+            style: FilledButton.styleFrom(
+              backgroundColor: kAcidLime,
+              foregroundColor: kVoid,
+              shape: const StadiumBorder(),
+            ),
+            child: const Text('Plan my day'),
+          ),
+        ],
+      ),
     ),
   );
 
@@ -132,7 +255,7 @@ class _ChatScreenState extends State<ChatScreen> {
         Expanded(
           child: TextField(
             controller: _input,
-            onSubmitted: (_) => _send(),
+            onSubmitted: _send,
             style: const TextStyle(fontSize: 14, color: kMist),
             decoration: const InputDecoration(
               hintText: 'Ask Day Pilot anything…',
@@ -141,7 +264,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         const SizedBox(width: 8),
         IconButton(
-          onPressed: _send,
+          onPressed: () => _send(),
           icon: const Icon(Icons.arrow_upward, color: kAcidLime),
         ),
       ],

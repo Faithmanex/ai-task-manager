@@ -111,7 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ChatScreen()),
+              MaterialPageRoute(
+                builder: (_) => ChatScreen(controller: _controller),
+              ),
             ),
             icon: const Icon(Icons.forum_outlined, color: kFog),
           ),
@@ -163,7 +165,9 @@ class _HomeScreenState extends State<HomeScreen> {
         onSubmit: _submitCapture,
         onAssistantTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ChatScreen()),
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(controller: _controller),
+          ),
         ),
       ),
     );

@@ -15,8 +15,7 @@ void main() {
 
     expect(find.text('Today'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Email Dana the revised deck'), findsOneWidget);
-    expect(find.text('Book dentist appointment'), findsOneWidget);
+    expect(find.textContaining('All clear'), findsOneWidget);
   });
 
   testWidgets('quick capture adds a plain task', (tester) async {
@@ -33,6 +32,11 @@ void main() {
   testWidgets('task can be completed', (tester) async {
     await tester.pumpWidget(const AiTaskManagerApp());
     await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Buy oat milk');
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    expect(find.text('Buy oat milk'), findsOneWidget);
 
     final checkboxes = find.byType(GestureDetector);
     await tester.tap(checkboxes.first);
