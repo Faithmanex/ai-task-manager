@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../controllers/task_controller.dart';
 import '../../core/theme.dart';
 import '../../models/task.dart';
+import '../../services/ai/ai_settings_store.dart';
+import '../../services/ai/providers/openai_provider.dart';
 import 'chat_screen.dart';
 import 'settings_screen.dart';
 
@@ -17,13 +19,22 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _controller = TaskController();
   final _captureController = TextEditingController();
+  final _aiSettingsStore = AiSettingsStore();
   bool _parsing = false;
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(() => setState(() {}));
-    _controller.load();
+    _initController();
+  }
+
+  Future<void> _initController() async {
+    final aiConfig = await _aiSettingsStore.load();
+    if (aiConfig != null) {
+      _controller.gateway = OpenAiProvider(config: aiConfig);
+    }
+    await _controller.load();
   }
 
   @override
@@ -99,6 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => SettingsScreen(
+                  store: _aiSettingsStore,
+                  onSettingsSaved: (config) {
+                    if (config != null) {
+                      _controller.gateway = OpenAiProvider(config: config);
+                    } else {
+                      _controller.gateway = null;
+                    }
+                  },
                   onDeleteAll: () async {
                     await _controller.deleteAll();
                     if (context.mounted) Navigator.pop(context);

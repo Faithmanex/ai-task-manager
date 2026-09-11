@@ -1,8 +1,45 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ai_task_manager/models/task.dart';
+import 'package:ai_task_manager/services/ai/ai_settings_store.dart';
+import 'package:ai_task_manager/services/ai/gateway.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('AiSettingsStore', () {
+    test('save and load config', () async {
+      final store = AiSettingsStore();
+      expect(await store.load(), isNull);
+
+      final rawInitial = await store.loadRaw();
+      expect(rawInitial['baseUrl'], '');
+      expect(rawInitial['apiKey'], '');
+      expect(rawInitial['model'], '');
+
+      final config = AiConfig(
+        baseUrl: 'https://api.openai.com/v1',
+        apiKey: 'sk-testkey123',
+        chatModel: 'gpt-4o',
+      );
+
+      await store.save(config);
+
+      final loaded = await store.load();
+      expect(loaded, isNotNull);
+      expect(loaded!.baseUrl, 'https://api.openai.com/v1');
+      expect(loaded.apiKey, 'sk-testkey123');
+      expect(loaded.chatModel, 'gpt-4o');
+
+      final raw = await store.loadRaw();
+      expect(raw['baseUrl'], 'https://api.openai.com/v1');
+      expect(raw['apiKey'], 'sk-testkey123');
+      expect(raw['model'], 'gpt-4o');
+    });
+  });
   group('Task JSON round-trip', () {
     test('serializes and restores all fields', () {
       final task = Task(
